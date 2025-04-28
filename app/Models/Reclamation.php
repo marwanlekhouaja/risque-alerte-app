@@ -13,6 +13,7 @@ class Reclamation extends Model
         'incident_id',
         'dateReclamation',
         'commentaire',
+        'statut'
     ];
 
     public function user(){

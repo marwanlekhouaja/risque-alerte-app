@@ -33,6 +33,12 @@
                         </div>
                         <button type="submit" class="btn btn-primary mt-3">Import</button>
                     </form>
+                    <form action="{{ route('import.auto') }}" method="POST" style="display:inline-block;">
+                        @csrf
+                        <button type="submit" class="btn btn-success mt-3">Mettre à jour automatiquement</button>
+                    </form>
+                    
+                    
                 </div>
             </div>
         </div>

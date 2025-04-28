@@ -2,18 +2,33 @@
 
 @section('content')
     <style>
-        #sidebar,
+        #sidebar {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
         #main-content {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
+            margin-left: 16.6%;
+            /* Correspond à col-md-2 */
+            padding: 2rem;
+        }
+
+        [id] {
+            scroll-margin-top: 100px;
         }
     </style>
     <div class="container-fluid">
         <div class="row">
             <!-- Sidebar with Anchor Links -->
             <div class="col-md-2 bg-dark text-white p-3" style="height: 200rem100vh;">
-                <h4 class="text-center mb-4">Admin Panel</h4>
+                <div class="d-flex align-items-center">
+                    <img src="{{ asset('/storage/logo.png') }}" width="60" height="60" alt="">
+                    <h4 style="font-family:'Courier New', Courier, monospace" class="mt-2 ms-1">Risque Alerte</h4>
+                </div>
                 <ul class="nav flex-column">
                     <li class="nav-item">
                         <a class="nav-link text-white" href="#dashboard">
@@ -49,23 +64,21 @@
             </div>
 
             <!-- Main Content Area -->
-            <div class="col-md-10 p-4">
+            <div class="col-md-10 ">
                 <!-- Top Header (Admin Info and Logout) -->
                 <div class="d-flex justify-content-between align-items-center mb-4" id="dashboard">
                     <div>
                         <h1>Welcome, {{ auth()->user()->nom }} {{ auth()->user()->prenom }}</h1>
                         <p>Role: <strong>{{ auth()->user()->role }}</strong></p>
                         <!-- Edit Admin Data Button -->
-                        <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editAdminModal">
-                            Edit Profile
-                        </button>
+                        <div class="d-flex align-items-center">
+                            <button class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#editAdminModal">
+                                Edit Profile
+                            </button>
+                            <x-logout-component />
+                        </div>
                     </div>
-                    <div>
-                        <form action="{{ route('auth.logout') }}" method="POST">
-                            @csrf
-                            <button type="submit" class="btn btn-danger">Logout</button>
-                        </form>
-                    </div>
+
                 </div>
 
                 <!-- Dashboard Stats -->
@@ -152,6 +165,40 @@
                 </div>
 
                 <!-- Incidents Section -->
+                <form method="GET" class="p-3 bg-light rounded mb-3 d-flex gap-3 align-items-center">
+                    <div>
+                        <label for="category">Category</label>
+                        <select name="category" id="category" class="form-control">
+                            <option value="">All</option>
+                            @foreach ($categories as $category)
+                                <option value="{{ $category->id }}"
+                                    {{ request('category') == $category->id ? 'selected' : '' }}>
+                                    {{ $category->nomCategorie }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <x-prefecture-component  :selected="request('prefecture')" />
+
+                    {{-- <div>
+                        <label for="prefecture">Prefecture</label>
+                        <select name="prefecture" id="prefecture" class="form-control text-capitalize">
+                            <option value="">All</option>
+                            @foreach ($prefectures as $pref)
+                                <option value="{{ $pref }}"
+                                    {{ request('prefecture') == $pref ? 'selected' : '' }}>
+                                    {{ ucfirst($pref) }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div> --}}
+
+                    <div >
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                        <a href="{{ route('admin.panel') }}" class="btn btn-secondary">Reset</a>
+                    </div>
+                </form>
+
                 <div id="incidents" class="card mb-4 shadow-lg">
                     <div class="card-header bg-dark d-flex justify-content-between">
                         <span class="text-light">Incidents</span>
@@ -209,26 +256,30 @@
                                     <th>Commentaire</th>
                                     <th>Incident</th>
                                     <th>Client</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($reclamations as $r)
-                                    <tr>
-                                        <td>{{ $r->id }}</td>
-                                        <td>{{ $r->commentraire ?? 'no message existe' }}</td>
-                                        <td>{{ $r->incident->incident_name ?? 'N/A' }}</td>
-                                        <td>{{ $r->user->nom ?? 'N/A' }}{{ $r->user->prenom }}</td>
-                                        {{-- <td>
-                                            <a href="{{ route('reclamations.edit', $r->id) }}"
-                                                class="btn btn-sm btn-primary">Edit</a>
-                                            <form action="{{ route('reclamations.destroy', $r->id) }}" method="POST"
-                                                style="display:inline-block">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger"
-                                                    onclick="return confirm('Delete this reclamation?')">Delete</button>
-                                            </form>
-                                        </td> --}}
-                                    </tr>
+                                    @if ($r->statut == 'en attente')
+                                        <tr>
+                                            <td>{{ $r->id }}</td>
+                                            <td>{{ $r->commentraire ?? 'Pas de message' }}</td>
+                                            <td>{{ $r->incident->incident_name ?? 'N/A' }}</td>
+                                            <td>{{ $r->user ? $r->user->nom . ' ' . $r->user->prenom : 'N/A' }}</td>
+                                            <td>{{ $r->statut }}</td>
+                                            <td>
+                                                <form action="{{ route('reclamations.update', $r->id) }}" method="POST"
+                                                    style="display:inline-block">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <input type="submit" value="Valider"
+                                                        class="btn btn-sm btn-success" />
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    @endif
                                 @endforeach
                             </tbody>
                         </table>
@@ -281,4 +332,22 @@
 
     <!-- Include the Modal Partial -->
     @include('admin.edit-modal')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const links = document.querySelectorAll('.nav-link');
+            links.forEach(link => {
+                link.addEventListener('click', function() {
+                    links.forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        });
+    </script>
+
+    <style>
+        .nav-link.active {
+            background-color: #198754;
+            border-radius: 5px;
+        }
+    </style>
 @endsection

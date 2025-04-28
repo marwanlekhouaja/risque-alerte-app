@@ -1,7 +1,7 @@
 @extends('layouts.main')
 @section('content')
     <div class="container mt-4">
-        <h2 class="mb-3">Modifier l'Incident</h2>
+        <h2 class="mb-3">Creer l'Incident</h2>
         <form action="{{ route('incidents.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="mb-3">

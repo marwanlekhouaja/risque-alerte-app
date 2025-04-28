@@ -16,10 +16,10 @@
             <label for="exampleFormControlInput1" class="form-label">telephone </label>
             <input type="text" class="form-control" value="{{old('telephone')}}" name="telephone" id="exampleFormControlInput1" >
           </div>
-          <div class="mb-1">
+          {{-- <div class="mb-1">
             <label for="exampleFormControlInput1" class="form-label">Adresse(optional)</label>
             <input type="text" class="form-control" value="{{old('adresse')}}" name="adresse" id="exampleFormControlInput1" />
-          </div>
+          </div> --}}
         <div class="mb-1">
             <label for="exampleFormControlInput1" class="form-label">Email </label>
             <input type="email" class="form-control" value="{{old('email')}}" name="email" id="exampleFormControlInput1" placeholder="name@example.com">

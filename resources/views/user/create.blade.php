@@ -35,6 +35,14 @@
                     <input type="password" name="password"
                         value="{{ old('password') }}"class="form-control" />
                 </div>
+                <div class="mb-1">
+                    <label class="form-label">role</label>
+                    <select name="role" id="">
+                        <option value="user">Utilisateur</option>
+                        <option value="chargeclientele">Charge clientele</option>
+                    </select>
+                </div>
+
                 <input type="submit" value="creer" class="btn btn-dark mt-2" />
             </form>
         </div>

@@ -28,4 +28,12 @@ class Incident extends Model
     public function user(){
         return $this->belongsTo(User::class, 'id_user');
     }
+
+    public function reclamations(){
+        return $this->hasMany(Reclamation::class, 'incident_id');
+    }
+    public function reclamation()
+    {
+        return $this->hasOne(Reclamation::class);  // Chaque incident a une réclamation
+    }
 }

@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\User;
@@ -11,55 +10,61 @@ use Illuminate\Support\Facades\Session;
 class AuthController extends Controller
 {
 
-    public function show(){
+    public function show()
+    {
         return view('auth.login');
     }
     public function login(Request $request)
-{
-    $credentials = $request->only('email', 'password');
+    {
+        $credentials = $request->only('email', 'password');
 
-    if (auth()->attempt($credentials)) {
-        $request->session()->regenerate();
+        if (auth()->attempt($credentials)) {
+            $request->session()->regenerate();
 
-        // Check the user's role
-        if (auth()->user()->role === 'admin') {
-            return to_route('admin.panel');
-        } else {
-            return to_route('incidents.index');
+            // Check the user's role
+            if (auth()->user()->role === 'admin') {
+                return to_route('admin.panel');
+            } elseif (auth()->user()->role == "chargeclientele") {
+                return to_route('client_service.dashboard');
+
+            } else {
+                return to_route('incidents.index');
+            }
         }
-    }
 
-    return redirect()->back()->withErrors([
-        'email' => 'The provided credentials do not match our records.',
-    ]);
-}
+        return redirect()->back()->withErrors([
+            'email' => 'The provided credentials do not match our records.',
+        ]);
+    }
 
 
     public function logout(Request $request)
     {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-    
+
+        if (Auth::check()) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+       
         return redirect()->route('auth.show')->with('success', 'Logged out successfully.');
     }
-    
-
-    
-        
-    public function show_register_page(){
+    public function show_register_page()
+    {
         return view('auth.register');
     }
 
-    public function register(Request $request){
-        
+    public function register(Request $request)
+    {
+
         User::create([
             'nom' => $request->nom,
             'prenom' => $request->prenom,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'adresse'=>$request->adresse?$request->adresse:null,
-            'telephone'=>$request->telephone
+            'adresse' => $request->adresse ? $request->adresse : null,
+            'telephone' => $request->telephone,
+            'role' => $request->role ? $request->role : null
         ]);
 
         return redirect()->route('auth.show')->with('success', 'User created successfully.');

@@ -42,6 +42,8 @@ class UserController extends Controller
             'prenom' => $request->prenom,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'telephone' => $request->telephone,
+            'role' => $request->role ?? 'user', // Default to 'client' if not provided
         ]);
 
         return redirect()->route('user.index')->with('success', 'User created successfully.');
