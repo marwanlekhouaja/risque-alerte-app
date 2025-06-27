@@ -5,13 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Categorie;
 use App\Models\Incident;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Str;
 class IncidentControllerForClient extends Controller
 {
     public function create()
     {
         $categories = Categorie::all();
-        return view('user.createIncident', compact( 'categories'));
+        return view('user.createIncident', compact('categories'));
     }
     public function store(Request $request)
     {
@@ -27,7 +27,9 @@ class IncidentControllerForClient extends Controller
         //     'prefecture' => 'required',
         //     'date' => ''
         // ]);
-        $validatedData=$request->post();
+        $validatedData = $request->post();
+        $validatedData['id_user'] = auth()->user()->id;
+        $validatedData['sheet_id'] = 'RDAlrt-' . substr(str_shuffle(str_repeat('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 10)), 0, 10);
 
         $validatedData['date'] = now();
 
@@ -43,7 +45,7 @@ class IncidentControllerForClient extends Controller
             $validatedData['photo'] = $path;
         }
 
-        $validatedData['id_user']=auth()->user()->id;
+        $validatedData['id_user'] = auth()->user()->id;
 
         // dd($validatedData);
 

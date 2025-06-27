@@ -25,7 +25,7 @@ class AuthController extends Controller
             if (auth()->user()->role === 'admin') {
                 return to_route('admin.panel');
             } elseif (auth()->user()->role == "chargeclientele") {
-                return to_route('client_service.dashboard');
+                return to_route('chargeclientele.dashboard');
 
             } else {
                 return to_route('incidents.index');
@@ -56,6 +56,12 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
+        $request->validate([
+            'nom'=>'required|string|max:255',
+            'prenom'=>'required|string|max:255',
+            'email'=>'required|email|unique:users,email',
+            'password'=>'required|min:4'
+        ]);
 
         User::create([
             'nom' => $request->nom,

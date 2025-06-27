@@ -3,64 +3,44 @@
 namespace App\Http\Controllers;
 
 use App\Models\Categorie;
+use App\Models\Incident;
 use App\Models\Reclamation;
+use App\Models\User;
+use DB;
 use Illuminate\Http\Request;
 
 class ClientServiceController extends Controller
 {
-    public function dashboard(Request $request)
+    public function index()
+{
+    $incidents = Incident::with('user', 'category')
+        ->where('statut', 'en cours') // ⬅ Affiche uniquement les incidents à valider
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    $categoriesStats = Incident::select('id_category', DB::raw('count(*) as total'))
+        ->groupBy('id_category')
+        ->with('category')
+        ->get();
+
+    $prefecturesStats = Incident::select('prefecture', DB::raw('count(*) as total'))
+        ->groupBy('prefecture')
+        ->get();
+
+    $users = User::with('incidents')->get();
+            
+
+    return view('chargeclientele.dashboardchargeclientele', compact('incidents', 'categoriesStats', 'prefecturesStats','users'));
+}
+
+
+    // Valider un incident
+    public function valider($id)
     {
-        $categories = Categorie::all();
+        $incident = Incident::findOrFail($id);
+        $incident->statut = 'validé';
+        $incident->save();
 
-        $reclamationsQuery = Reclamation::with(['user', 'incident.category']);
-
-        if ($request->filled('category_id')) {
-            $reclamationsQuery->whereHas('incident', function ($q) use ($request) {
-                $q->where('id_category', $request->category_id);
-            });
-        }
-
-        $reclamations = $reclamationsQuery->paginate(10);
-
-        // Préparer les statistiques
-        $categoryData = Categorie::with(['incidents.reclamations'])->get();
-
-        $chartLabels = [];
-        $chartData = [];
-
-        foreach ($categoryData as $categorie) {
-            $count = 0;
-            foreach ($categorie->incidents as $incident) {
-                $count += $incident->reclamations->count();
-            }
-
-            if ($count > 0) {
-                $chartLabels[] = $categorie->nomCategorie . " ($count)"; // << ici on ajoute aussi le nombre
-                $chartData[] = $count;
-            }
-        }
-
-        return view('chargeclientele.dashboardchargeclientele', compact('categories', 'reclamations', 'chartLabels', 'chartData'));
-    }
-
-
-
-    // Validation d'une réclamation (mise à jour du statut)
-    public function validateReclamation($id)
-    {
-        $reclamation = Reclamation::findOrFail($id);
-        $reclamation->update(['statut' => 'validé']);
-
-        return redirect()->back()->with('success', 'Réclamation validée.');
-        
-    }
-
-    // Rejet d'une réclamation (mise à jour du statut)
-    public function reject($id)
-    {
-        $reclamation = Reclamation::findOrFail($id);
-        $reclamation->update(['statut' => 'rejeté']);
-
-        return redirect()->back()->with('success', 'Réclamation rejetée.');
+        return redirect()->back()->with('success', 'Incident validé avec succès.');
     }
 }

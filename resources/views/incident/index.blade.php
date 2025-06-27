@@ -1,80 +1,148 @@
 @extends('layouts.main')
 
 @section('content')
+@include('user.modals.editProfile')
     <style>
-        .spinner-border {
-            animation: spin 2s linear infinite;
-            /* Rotation 360 degrés */
-        }
-
         @keyframes spin {
-            0% {
+            from {
                 transform: rotate(0deg);
             }
 
-            100% {
+            to {
                 transform: rotate(360deg);
             }
         }
+
+        .rotate {
+            display: inline-block;
+            animation: spin 2s linear infinite;
+        }
     </style>
-    <div class="">
+
+    <div>
         <div class="nav p-1 shadow-lg">
-            <div class="container mt-2 ">
+            <div class="container mt-2">
                 <div class="d-flex justify-content-between align-items-center">
-                    <!-- Bouton Notification -->
                     <div class="d-flex align-items-center">
                         <img src="{{ asset('/storage/logo.png') }}" width="60" height="60" alt="">
                         <h4 style="font-family:'Courier New', Courier, monospace" class="mt-2 ms-1">Risque Alerte</h4>
                     </div>
                     <div class="d-flex align-items-center">
-                        <div class="dropdown">
-                            <button class="btn position-relative" id="notificationsDropdown" data-bs-toggle="dropdown"
-                                aria-expanded="false">
-                                <i class="bi bi-bell" style="font-size: 17px;"></i>
-                                @if (auth()->user()->unreadNotifications->count() > 0)
-                                    <span
-                                        class="position-absolute top-0 start-100 translate-middle p-1  bg-danger border border-light rounded-circle"></span>
-                                @endif
+                        {{-- <x-logout-component /> --}}
+                        @php
+                            $notifications = auth()->user()->unreadNotifications;
+                        @endphp
 
-                            </button>
-                            <ul class="dropdown-menu">
-                                @forelse (auth()->user()->notifications as $notification)
-                                    <li>
-                                        <a class="dropdown-item" href="{{ $notification->data['url'] ?? '#' }}"
-                                            onclick="markAsRead('{{ $notification->id }}')">
-                                            {{ $notification->data['message'] ?? 'Notification' }}
-                                        </a>
+                        <div class="position-relative me-3 ms-2">
+                            <a href="#" id="notificationsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-bell fs-4"></i>
+                                @if ($notifications->count() > 0)
+                                    <span
+                                        class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                                        <span class="visually-hidden">Nouvelles notifications</span>
+                                    </span>
+                                @endif
+                            </a>
+                            @php
+                                $notifications = auth()->user()->notifications;
+                            @endphp
+                            <ul class="dropdown-menu" aria-labelledby="notificationsDropdown">
+                                @forelse ($notifications as $notification)
+                                    <li class="dropdown-item small {{ $notification->read_at ? 'text-muted' : 'fw-bold' }}">
+                                        {{ $notification->data['message'] }}
+                                        <div class="text-muted small">Reçu le
+                                            {{ $notification->created_at->format('d/m/Y H:i') }}</div>
                                     </li>
                                 @empty
-                                    <li><span class="dropdown-item">Pas de notifications</span></li>
+                                    <li class="dropdown-item text-muted">Aucune notification</li>
                                 @endforelse
                             </ul>
+                        </div>
+                        <div class="dropdown ms-3">
 
+                            <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle"
+                                id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                @if (auth()->user()->photo)
+                                    <img src="{{ asset('storage/' . auth()->user()->photo) }}" alt="Photo de profil"
+                                        class="rounded-circle" width="40" height="40" style="object-fit: cover;">
+                                @else
+                                    <div class="bg-secondary text-white rounded-circle d-flex justify-content-center align-items-center"
+                                        style="width: 40px; height: 40px;">
+                                        <i class="bi bi-person fs-5"></i>
+                                    </div>
+                                @endif
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end text-small shadow" aria-labelledby="userDropdown">
+                                <li class="dropdown-item"><strong>Nom :</strong>
+                                    {{ auth()->user()->nom . ' ' . auth()->user()->prenom }}</li>
+                                <li class="dropdown-item"><strong>Email :</strong> {{ auth()->user()->email }}</li>
+                                <li class="dropdown-item"><strong>Téléphone :</strong> {{ auth()->user()->telephone }}</li>
+                                <li class="dropdown-item"><strong>Nombre des réclamations :</strong>
+                                    {{ auth()->user()->incidents()->count() }}</li>
+
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+
+                                <!-- Bouton pour ouvrir le modal -->
+                                <li>
+                                    <a class="dropdown-item text-primary" href="#" data-bs-toggle="modal"
+                                        data-bs-target="#editProfileModal">
+                                        Modifier Profil
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{{ route('auth.logout') }}"
+                                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                        Se déconnecter
+                                    </a>
+                                </li>
+                                <form id="logout-form" action="{{ route('auth.logout') }}" method="POST" class="d-none">
+                                    @csrf
+                                </form>
+                            </ul>
 
                         </div>
-                        <!-- Bouton Logout -->
-                        <x-logout-component />
                     </div>
                 </div>
             </div>
-
-
-
         </div>
 
-        <div>
-            <h2 class="text-center mt-2" style="font-family: monospace">Bienvenue {{ auth()->user()->prenom }}
-                {{ auth()->user()->nom }}</h2>
-        </div>
-        <div class="container mt-4 d-flex justify-content-between align-items-center">
-            <h1>Liste des Incidents</h1>
-            <form action="{{ route('incident.create') }}" method="get">
-                @csrf
-                <input type="submit" class="btn btn-dark" value="Ajouter un incident">
+        <div class="container mt-4">
+            <form method="GET" class="row g-3 align-items-end">
+                <!-- Select catégorie -->
+                <div class="col-md-4 mb-4">
+                    <label for="categorie" class="form-label">Catégorie</label>
+                    <select name="categorie" id="categorie" class="form-select">
+                        <option value="">-- Toutes les catégories --</option>
+                        @foreach ($categories as $cat)
+                            <option value="{{ $cat->id }}" {{ request('categorie') == $cat->id ? 'selected' : '' }}>
+                                {{ $cat->nomCategorie }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Select préfecture via composant -->
+                <div class="col-md-4 mb-4">
+                    @include('components.prefecture-component')
+                </div>
+
+                <div class="col-md-4 mb-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Filtrer</button>
+                    <a href="{{ route('incidents.index') }}" class="btn btn-secondary">Réinitialiser</a>
+                </div>
             </form>
-
         </div>
+
+        <div class="container mt-4 d-flex align-items-center justify-content-between">
+            <h1>Liste des Incidents déclarés</h1>
+            <a href="{{ route('incident.create') }}" class="btn btn-dark">Ajouter un incident</a>
+        </div>
+
         <hr class="container">
+
         <div class="container">
             @if (session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
@@ -84,107 +152,71 @@
             @endif
         </div>
 
-        {{-- ... Le reste de ta page d'incidents --}}
         <div class="container mt-2">
             <div class="row">
-                @foreach ($incidents as $incident)
+                @forelse ($incidents as $incident)
                     <div class="col-md-4 mb-4">
                         <div class="card shadow-sm h-100">
-                            @if ($incident->photo)
-                                <img src="{{ asset('storage/' . $incident->photo) }}" class="card-img-top"
-                                    alt="Photo Incident">
-                            @endif
                             <div class="card-body">
-                                <h5 class="card-title">{{ $incident->incident_name }}</h5>
-                                <p class="card-text"><strong>Catégorie:</strong>
-                                    {{ $incident->category->nomCategorie ?? 'Non spécifiée' }}</p>
-                                <p class="card-text"><strong>Détails:</strong> {{ $incident->detail }}</p>
-                                <p class="card-text"><strong>Adresse:</strong> {{ $incident->adresse }}</p>
-                                <p class="card-text"><strong>Date:</strong> {{ $incident->date }}</p>
-                                @if ($incident->reclamation && $incident->reclamation->statut == 'validee')
-                                    <!-- Logo de traitement en cours -->
-                                    <div class="d-flex align-items-center">
-                                        {{-- <div class="spinner-border text-info" role="status"
-                                            style="width: 3rem; height: 3rem;">
-                                            <span class="visually-hidden">Chargement...</span>
-                                        </div> --}}
-                                        <i class="bi bi-hourglass-split"></i>
-                                        <p class="ms-3">Incident en cours de traitement</p>
+                                <h5 class="card-title text-secondary">#{{ $incident->sheet_id }}</h5>
+                                <p><strong>Nom de l'incident :</strong> {{ $incident->incident_name }}</p>
+                                <p><strong>Catégorie :</strong> {{ $incident->category->nomCategorie ?? 'Non spécifiée' }}
+                                </p>
+                                <p><strong>Détails :</strong> {{ $incident->detail ?? 'Aucun détail' }}</p>
+                                <p><strong>Préfecture :</strong> {{ $incident->prefecture ?? 'Inconnue' }}</p>
+                                <p><strong>Adresse :</strong> {{ $incident->adresse ?? 'Inconnue' }}</p>
+                                <p><strong>Date de déclaration :</strong>
+                                    {{ \Carbon\Carbon::parse($incident->date)->format('d/m/Y H:i') }}</p>
+
+                                @if ($incident->statut === 'en cours')
+                                    <div class="alert alert-info d-flex align-items-center" role="alert">
+                                        <i class="bi bi-info-circle-fill me-2"></i>
+                                        <div>Votre demande est en cours de traitement.</div>
                                     </div>
                                 @else
-                                    <button class="btn btn-primary" data-bs-toggle="modal"
-                                        data-bs-target="#reclamationModal" data-incident="{{ $incident->id }}">
-                                        Valider
-                                    </button>
+                                    <div class="alert alert-success d-flex align-items-center" role="alert">
+                                        <i class="bi bi-check-circle-fill me-2"></i>
+                                        <div>Votre demande a été validée.</div>
+                                    </div>
                                 @endif
+
+                                <div class="d-flex align-items-center mb-2">
+                                    <button class="btn btn-outline-info ms-2" data-bs-toggle="modal"
+                                        data-bs-target="#incidentDetailModal-{{ $incident->id }}">
+                                        Détails
+                                    </button>
+                                </div>
+
+                                @include('components.incident-detail-modal', ['incident' => $incident])
                             </div>
                         </div>
                     </div>
-                @endforeach
+                @empty
+                    <div class="col-12 mt-4">
+                        <div class="alert alert-warning">Aucun incident trouvé pour ces critères.</div>
+                    </div>
+                @endforelse
             </div>
-        </div>
-
-    </div>
-
-    <!-- Modal Bootstrap pour confirmation de réclamation -->
-    <div class="modal fade" id="reclamationModal" tabindex="-1" aria-labelledby="reclamationModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <form method="POST" action="{{ route('reclamations.store') }}">
-                @csrf
-                <input type="hidden" name="incident_id" id="modal-incident-id">
-                <input type="hidden" name="user_id" value="{{ auth()->user()->id }}">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Confirmation de réclamation</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        Voulez-vous vraiment soumettre une réclamation pour cet incident ?
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Non</button>
-                        <button type="submit" class="btn btn-success">Oui, Valider</button>
-                    </div>
-                </div>
-            </form>
         </div>
     </div>
 @endsection
 
 @section('scripts')
     <script>
-        const modal = document.getElementById('reclamationModal');
-        modal.addEventListener('show.bs.modal', function(event) {
-            const button = event.relatedTarget;
-            const incidentId = button.getAttribute('data-incident');
-            document.getElementById('modal-incident-id').value = incidentId;
-        });
-
-        // Marquer une notification comme lue (quand on clique sur un lien individuel)
-        function markAsRead(notificationId) {
-            fetch(`/notifications/mark-as-read/${notificationId}`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                }
-            }).then(response => {
-                if (response.ok) {
-                    console.log('Notification marquée comme lue');
-                }
+        const notifDropdown = document.getElementById('notificationsDropdown');
+        if (notifDropdown) {
+            notifDropdown.addEventListener('click', function() {
+                fetch('/notifications/mark-all-as-read', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        document.querySelector('.position-absolute.top-0.start-100')?.remove();
+                    }
+                });
             });
         }
-
-        document.getElementById('notificationsDropdown').addEventListener('click', function() {
-            fetch('/notifications/mark-all-as-read', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                }
-            }).then(response => {
-                if (response.ok) {
-                    document.querySelector('.position-absolute.top-0.start-100')?.remove();
-                }
-            });
-        });
     </script>
 @endsection

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Categorie;
 use App\Models\Incident;
+use Illuminate\Support\Str;
 use App\Models\User;
 use App\Notifications\ReclamationValidee;
 use Illuminate\Http\Request;
@@ -13,17 +14,51 @@ class IncidentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    
-    public function index()
+
+    // public function index()web.
+    // {
+    //     // if (auth()->user()->role == "user") {
+    //         $incidents = Incident::with(['category', 'user'])->get();
+
+    //     //     $notifications = auth()->user()->unreadNotifications;
+    //     //     ;
+    //         return view('incident.index', compact('incidents', ));
+
+    //     // return abort(4message: 03,'Acces interdit');
+    // }
+    public function index(Request $request)
     {
-        if (auth()->user()->role == "user") {
-            $incidents = auth()->user()->incidents()->with(['category', 'user'])->get();
-            $notifications = auth()->user()->unreadNotifications;
-            ;
-            return view('incident.index', compact('incidents', 'notifications'));
+        $user = auth()->user(); // Récupère l'utilisateur connecté
+
+        $categories = Categorie::all();
+
+        // Préfectures distinctes basées sur les incidents de l'utilisateur connecté
+        $prefectures = Incident::where('id_user', $user->id)
+            ->selectRaw('DISTINCT LOWER(prefecture) as prefecture')
+            ->whereNotNull('prefecture')
+            ->pluck('prefecture')
+            ->map(fn($p) => ucfirst($p))
+            ->sort()
+            ->unique()
+            ->values();
+
+        // Préparation de la requête incidents de l'utilisateur connecté
+        $query = Incident::with(['category', 'user'])
+            ->where('id_user', $user->id);
+
+        if ($request->filled('categorie')) {
+            $query->where('id_category', $request->categorie);
         }
-        return abort(403,'Acces interdit');
+
+        if ($request->filled('prefecture')) {
+            $query->whereRaw('LOWER(prefecture) = ?', [strtolower($request->prefecture)]);
+        }
+
+        $incidents = $query->get();
+
+        return view('incident.index', compact('incidents', 'categories', 'prefectures'));
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -121,7 +156,12 @@ class IncidentController extends Controller
         $incident->update($validatedData);
 
         // Rediriger avec un message
+        if(auth()->user()->role!="admin"){
+            return redirect()->route('chargeclientele.dashboard')->with('success', value: 'Incident mis à jour avec succès.');
+        }
         return redirect()->route('admin.panel')->with('success', 'Incident mis à jour avec succès.');
+        // return redirect()->back()->with('success', value: 'Incident mis à jour avec succès.');
+
     }
 
 
@@ -131,7 +171,9 @@ class IncidentController extends Controller
     public function destroy(Incident $incident)
     {
         $incident->delete();
-        return redirect()->route('admin.panel')->with('danger', 'Incident deleted successfully.');
+        // return redirect()->route('admin.panel')->with('danger', 'Incident deleted successfully.');
+        return redirect()->back()->with('danger', 'Incident deleted successfully.');
+
     }
 
 
@@ -139,5 +181,20 @@ class IncidentController extends Controller
     {
         $incidents = Incident::with(['category', 'user'])->get();
         return view('incident.liste', compact('incidents'));
+    }
+
+    public function valider($id)
+    {
+        $incident = Incident::findOrFail($id);
+        $incident->statut = 'validé';
+        $incident->save();
+
+        // // Notification à l'utilisateur
+        $user = $incident->user;
+        if ($user) {
+            $user->notify(new ReclamationValidee($incident));
+        }
+
+        return redirect()->back()->with('success', value: 'Incident validé avec succès.');
     }
 }

@@ -69,7 +69,10 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    // 'timezone' => 'UTC',
+    'timezone' => 'Africa/Casablanca',
+    // 'timezone' => 'Europe/Paris',
+
 
     /*
     |--------------------------------------------------------------------------

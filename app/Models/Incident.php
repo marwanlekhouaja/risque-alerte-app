@@ -9,6 +9,7 @@ class Incident extends Model
 {
     use HasFactory;
     protected $fillable = [
+        'sheet_id',
         'incident_name',
         'id_category',
         'id_user',
@@ -20,6 +21,7 @@ class Incident extends Model
         'date',
         'longitude',
         'latitude',
+        'statut'
     ];
 
     public function category(){
@@ -36,4 +38,5 @@ class Incident extends Model
     {
         return $this->hasOne(Reclamation::class);  // Chaque incident a une réclamation
     }
+
 }

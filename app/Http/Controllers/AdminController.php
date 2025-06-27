@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Categorie;
 use App\Models\Incident;
 use App\Models\Reclamation;
 use App\Models\User;
@@ -40,17 +41,22 @@ class AdminController extends Controller
             ->distinct()
             ->pluck('prefecture');
 
-        $reclamations = Reclamation::with('incident', 'user')->get();
+        $incidentsValides = Incident::where('statut', 'validé')->count();    
+        $incidentsNonValides = Incident::where('statut', '!=', 'validé')->count();
+
+        // $reclamations = Reclamation::with(relations: relations: 'incident', 'user')->get();
 
         return view('admin.panel', [
             'admin' => auth()->user(),
             'users' => $users,
             'incidents' => $incidents,
-            'reclamations' => $reclamations,
+            // 'reclamations' => $reclamations,
             'categories' => $categories,
+            'categoriesCount'=>Categorie::count(),
             'usersCount' => $users->count(),
             'incidentsCount' => $incidents->count(),
-            'reclamationsCount' => $reclamations->count(),
+            'incidentsNonValides'=> $incidentsNonValides,
+            'incidentsValides' => $incidentsValides,
             'prefectures' => $prefectures,
         ]);
     }

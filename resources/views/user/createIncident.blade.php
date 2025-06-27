@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container mt-4">
-        <h2 class="mb-3">Créer Incident</h2>
+        <h2 class="mb-3">déclarer Incident</h2>
 
         @php
             $incidentData = [
@@ -80,8 +80,8 @@
             </div>
 
             <div class="mb-3">
-                <label for="adresse" class="form-label">Adresse exacte (automatique)</label>
-                <input type="text" class="form-control" id="adresse" value="" name="adresse" required readonly>
+                <label for="adresse" class="form-label">Adresse</label>
+                <input type="text" class="form-control" id="adresse" name="adresse" required >
             </div>
 
             {{-- <div id="map" style="height: 300px;" class="mb-3"></div> --}}
@@ -92,7 +92,7 @@
                 <x-prefecture-component />
             </div>
 
-            <div class="mb-3">
+            {{-- <div class="mb-3">
                 <label for="longitude" class="form-label">Longitude</label>
                 <input type="text" class="form-control" id="longitude" name="longitude" readonly>
             </div>
@@ -100,7 +100,7 @@
             <div class="mb-3">
                 <label for="latitude" class="form-label">Latitude</label>
                 <input type="text" class="form-control" id="latitude" name="latitude" readonly>
-            </div>
+            </div> --}}
 
             <div class="mb-3">
                 <label for="photo" class="form-label">Photo </label>
@@ -148,49 +148,6 @@
             }
         });
 
-        // Géolocalisation + Leaflet
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(async function(position) {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-
-                    document.getElementById('latitude').value = lat;
-                    document.getElementById('longitude').value = lon;
-
-                    const map = L.map('map').setView([lat, lon], 18);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        maxZoom: 19,
-                    }).addTo(map);
-
-                    const marker = L.marker([lat, lon], {
-                        draggable: true
-                    }).addTo(map);
-
-                    async function getAddress(lat, lon) {
-                        const url =
-                            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=fr`;
-                        const response = await fetch(url);
-                        const data = await response.json();
-                        return data.display_name || "";
-                    }
-
-                    document.getElementById('adresse').value = await getAddress(lat, lon);
-
-                    marker.on('moveend', async function(e) {
-                        const newLat = e.target.getLatLng().lat;
-                        const newLon = e.target.getLatLng().lng;
-
-                        document.getElementById('latitude').value = newLat;
-                        document.getElementById('longitude').value = newLon;
-                        document.getElementById('adresse').value = await getAddress(newLat, newLon);
-                    });
-
-                },
-                function(error) {
-                    alert("Erreur de géolocalisation : " + error.message);
-                });
-        } else {
-            alert("La géolocalisation n'est pas prise en charge.");
-        }
+        
     </script>
 @endsection

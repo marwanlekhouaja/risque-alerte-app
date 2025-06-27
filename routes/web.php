@@ -7,6 +7,7 @@ use App\Http\Controllers\IncidentController;
 use App\Http\Controllers\IncidentControllerForClient;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\ReclamationController;
+use App\Models\Incident;
 use Carbon\Traits\Localization;
 use GeoIp2\Record\Location;
 use Illuminate\Support\Facades\Route;
@@ -38,7 +39,7 @@ Route::get('/incidents/liste', [IncidentController::class, 'liste'])->name('inci
 
 // App protected routes
 Route::resource('users', App\Http\Controllers\UserController::class)->middleware('auth');
-Route::resource('incidents', IncidentController::class);
+Route::resource('incidents', IncidentController::class)->middleware('auth');
 Route::resource('reclamations', ReclamationController::class)->middleware('auth');
 Route::resource('categories', App\Http\Controllers\CategorieController::class)->middleware('auth');
 // Public OR protected route — selon ton choix
@@ -58,10 +59,15 @@ Route::post('/notifications/mark-all-as-read', function() {
 
 
 // routes of chargeclientele
-Route::middleware(['auth','chargeclientele'])->group(function () {
-    Route::get('/clientservice/dashboard', [ClientServiceController::class, 'dashboard'])->name('client_service.dashboard');
-    Route::post('/clientservice/validate/{id}', [ClientServiceController::class, 'validate'])->name('client_service.validate');
-    Route::post('/clientservice/reject/{id}', [ClientServiceController::class, 'reject'])->name('client_service.reject');
+// Route::middleware(['auth','chargeclientele'])->group(function () {
+//     Route::get('/clientservice/dashboard', [ClientServiceController::class, 'dashboard'])->name('client_service.dashboard');
+//     Route::post('/clientservice/validate/{id}', [ClientServiceController::class, 'validate'])->name('client_service.validate');
+//     Route::post('/clientservice/reject/{id}', [ClientServiceController::class, 'reject'])->name('client_service.reject');
+// });
+
+Route::middleware(['auth', 'chargeclientele'])->group(function () {
+    Route::get('/clientservice/dashboard', [ClientServiceController::class, 'index'])->name('chargeclientele.dashboard');
+    Route::put('/incident/{id}/valider', [IncidentController::class, 'valider'])->name('incident.valider');
 });
 
 Route::get('/incident/create',[IncidentControllerForClient::class,'create'])->name('incident.create');
@@ -77,4 +83,27 @@ Route::post('/save-location', function (Request $request) {
     // Traitement côté serveur
     dd($request->all());
 })->name('save.location');
+
+Route::get('/incidentsconfirmer',function(Request $request,)
+{
+    return response()->json(Incident::all(),200);
+});
+
+// routes of notifications
+Route::post('/notifications/mark-as-read/{id}', function ($id) {
+    $notification = auth()->user()->notifications()->find($id);
+    if ($notification) {
+        $notification->markAsRead();
+    }
+    return response()->json(['status' => 'ok']);
+})->middleware('auth');
+
+Route::post('/notifications/mark-all-as-read', function () {
+    auth()->user()->unreadNotifications->markAsRead();
+    return response()->json(['status' => 'all_read']);
+})->middleware('auth');
+
 ?>
+
+
+

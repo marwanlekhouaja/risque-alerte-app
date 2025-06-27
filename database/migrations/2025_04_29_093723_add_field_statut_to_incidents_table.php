@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('reclamations', function (Blueprint $table) {
-            $table->string('statut')->default('en attente');
+        Schema::table('incidents', function (Blueprint $table) {
+            $table->string('statut')->default('en cours');
         });
     }
 
@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('reclamations', function (Blueprint $table) {
+        Schema::table('incidents', function (Blueprint $table) {
             $table->dropColumn('statut');
         });
     }

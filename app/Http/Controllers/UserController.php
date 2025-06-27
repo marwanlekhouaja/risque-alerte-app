@@ -31,10 +31,7 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nom' => 'required|string|max:255',
-            'prenom' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
+            'email' => 'required|unique:users',
         ]);
 
         User::create(attributes: [
@@ -42,11 +39,12 @@ class UserController extends Controller
             'prenom' => $request->prenom,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'adresse' => $request->adresse??null,
             'telephone' => $request->telephone,
             'role' => $request->role ?? 'user', // Default to 'client' if not provided
         ]);
 
-        return redirect()->route('user.index')->with('success', 'User created successfully.');
+        return redirect()->route('admin.panel')->with('success', 'User created successfully.');
     }
 
     /**
@@ -77,9 +75,19 @@ class UserController extends Controller
             $data['password'] = Hash::make($request->password);
         }
 
+        if($request->has('role')) {
+            $data['role'] = $request->role;
+        }
+
         $user->update($data);
 
-        return redirect()->route('admin.panel')->with('success', 'User updated successfully.');
+        if(auth()->user()->role=="admin"){
+            return redirect()->route('admin.panel')->with('success', 'Profile est bien modifié.');
+        }
+        else if(auth()->user()->role=="chargeclientele"){
+            return redirect()->route('chargeclientele.dashboard')->with('success', 'User updated successfully.');
+        }
+        return redirect()->route('incidents.index')->with('success', 'User updated successfully.');
     }
 
 

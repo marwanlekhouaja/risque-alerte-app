@@ -7,7 +7,8 @@
     <title>Risque alerte</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
-    <link rel="shortcut icon" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWTaPun_H4kJA89B8zegaMWt3D2Tp_OwEd2w&s" type="image/x-icon">
+    {{-- <link rel="shortcut icon" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWTaPun_H4kJA89B8zegaMWt3D2Tp_OwEd2w&s" type="image/x-icon"> --}}
+    <link rel="shortcut icon" href="/storage/logo.png" type="image/x-icon">
 </head>
 <body>
     <style>

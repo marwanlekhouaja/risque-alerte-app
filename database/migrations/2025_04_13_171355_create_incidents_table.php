@@ -24,8 +24,8 @@ return new class extends Migration
             $table->string('prefecture');
             $table->string('adresse');
             $table->string('date');
-            $table->string('longitude');
-            $table->string('latitude');
+            $table->string('longitude')->nullable();
+            $table->string('latitude')->nullable();
             $table->timestamps();
         });
     }

@@ -37,6 +37,16 @@
                     <input type="password" name="password"
                         value="{{ old('password', $user->password) }}"class="form-control" />
                 </div>
+                @if (auth()->user()->role == 'admin')
+                    <div class="mb-1">
+                        <label for="exampleFormControlTextarea1" class="form-label">role</label>
+                        <select name="role" class="form-control" id="" >
+                            <option value="user" >Utilisateur</option>
+                            <option value="chargeclientele" >chargeclientele</option>
+                        </select>
+
+                    </div>
+                @endif
                 <input type="submit" value="modifier" class="btn btn-success mt-2" />
             </form>
         </div>
